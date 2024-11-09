@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pomodoro Clock</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .container {
+            height: 460px;
+            width: 220px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        .upper {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 36px;
+            font-weight: bold;
+            border-bottom: 1px solid #ccc;
+        }
+        .lower {
+            flex: 2;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .time-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .time-section button {
+            font-size: 18px;
+            width: 30px;
+            height: 30px;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        .time-section button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+        }
+        .controls button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .controls button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="upper" id="timer">25:00</div>
+        <div class="lower">
+            <div class="time-section">
+                <span>Session:</span>
+                <button id="session-minus">-</button>
+                <span id="session-time">25</span>
+                <button id="session-plus">+</button>
+            </div>
+            <div class="time-section">
+                <span>Break:</span>
+                <button id="break-minus">-</button>
+                <span id="break-time">5</span>
+                <button id="break-plus">+</button>
+            </div>
+            <div class="controls">
+                <button id="start">Start</button>
+                <button id="reset">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const timer = document.getElementById('timer');
+        const sessionTime = document.getElementById('session-time');
+        const breakTime = document.getElementById('break-time');
+        const sessionMinus = document.getElementById('session-minus');
+        const sessionPlus = document.getElementById('session-plus');
+        const breakMinus = document.getElementById('break-minus');
+        const breakPlus = document.getElementById('break-plus');
+        const startButton = document.getElementById('start');
+        const resetButton = document.getElementById('reset');
+
+        let isRunning = false;
+        let isSession = true;
+        let timeLeft = 25 * 60;
+        let interval;
+
+        function updateDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function toggleButtons(disabled) {
+            sessionMinus.disabled = disabled;
+            sessionPlus.disabled = disabled;
+            breakMinus.disabled = disabled;
+            breakPlus.disabled = disabled;
+            startButton.disabled = disabled;
+        }
+
+        function startTimer() {
+            if (!isRunning) {
+                isRunning = true;
+                startButton.textContent = 'Pause';
+                toggleButtons(true);
+                interval = setInterval(() => {
+                    if (timeLeft > 0) {
+                        timeLeft--;
+                        updateDisplay();
+                    } else {
+                        if (isSession) {
+                            isSession = false;
+                            timeLeft = parseInt(breakTime.textContent) * 60;
+                            timer.style.color = 'red';
+                        } else {
+                            isSession = true;
+                            timeLeft = parseInt(sessionTime.textContent) * 60;
+                            timer.style.color = 'black';
+                        }
+                    }
+                }, 1000);
+            } else {
+                isRunning = false;
+                startButton.textContent = 'Start';
+                toggleButtons(false);
+                clearInterval(interval);
+            }
+        }
+
+        function resetTimer() {
+            isRunning = false;
+            isSession = true;
+            timeLeft = parseInt(sessionTime.textContent) * 60;
+            startButton.textContent = 'Start';
+            toggleButtons(false);
+            clearInterval(interval);
+            updateDisplay();
+            timer.style.color = 'black';
+        }
+
+        function updateTime(element, increment) {
+            let time = parseInt(element.textContent);
+            time += increment;
+            if (time > 0) {
+                element.textContent = time;
+                if (!isRunning && isSession) {
+                    timeLeft = parseInt(sessionTime.textContent) * 60;
+                    updateDisplay();
+                }
+            }
+        }
+
+        sessionMinus.addEventListener('click', () => updateTime(sessionTime, -1));
+        sessionPlus.addEventListener('click', () => updateTime(sessionTime, 1));
+        breakMinus.addEventListener('click', () => updateTime(breakTime, -1));
+        breakPlus.addEventListener('click', () => updateTime(breakTime, 1));
+        startButton.addEventListener('click', startTimer);
+        resetButton.addEventListener('click', resetTimer);
+
+        updateDisplay();
+    </script>
+</body>
+</html>
